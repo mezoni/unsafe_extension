@@ -21,8 +21,8 @@ $ pub global run unsafe_extension:setup
 
 **Alternative setup**
 
-$ cd PUB_CACHE/global_packages
-$ cd unsafe_extension
+$ cd PUB_CACHE/global_packages  
+$ cd unsafe_extension  
 $ dart --enable_async bin/setup.dart.snapshot
 
 **Precompiled binaries**  
