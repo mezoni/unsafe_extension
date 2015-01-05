@@ -6,6 +6,7 @@ import "package:ccompilers/ccompilers.dart";
 import "package:file_utils/file_utils.dart";
 import "package:path/path.dart" as pathos;
 import "package:patsubst/patsubst.dart";
+import "package:pub_semver/pub_semver.dart";
 import "package:system_info/system_info.dart";
 
 void main(List<String> args) {
@@ -51,7 +52,16 @@ void main(List<String> args) {
   }
 
   // Set working directory
-  FileUtils.chdir("../lib/src");
+  var path = _findPackageInCache(PROJECT_NAME);
+  if (path == null) {
+    print("Package $PROJECT_NAME not found.");
+    exit(-1);
+  } else {
+    var package = pathos.basename(path);
+    print("Found in pub cache '$package'.");
+  }
+
+  FileUtils.chdir("$path/lib/src");
 
   // C++ files
   var cppFiles = FileUtils.glob("*.cc");
@@ -160,4 +170,64 @@ void main(List<String> args) {
   });
 
   new BuildShell().run(args).then((exitCode) => exit(exitCode));
+}
+
+String _findPackageInCache(String package, [String version]) {
+  var operatingSystem = Platform.operatingSystem;
+  var pubCache = Platform.environment["PUB_CACHE"];
+  if (pubCache == null) {
+    switch (operatingSystem) {
+      case "android":
+      case "linux":
+      case "macos":
+        pubCache = pathos.join(SysInfo.userDirectory, ".pub-cache");
+        break;
+      case "windows":
+        pubCache = pathos.join(SysInfo.userDirectory, "AppData", "Roaming", "Pub", "Cache");
+        break;
+      default:
+        return null;
+    }
+  }
+
+  var repository = pathos.join(pubCache, "hosted", "pub.dartlang.org");
+  var mask = pathos.join(repository, package);
+  if (version == null) {
+    mask += "*";
+  } else {
+    mask += "-$version";
+  }
+
+  mask = _pathToPosix(mask);
+  var paths = FileUtils.glob(mask);
+  var versions = <Version, String>{};
+  for (var path in paths) {
+    var basename = pathos.basename(path);
+    var versionString = basename.replaceFirst("$package-", "");
+    Version version;
+    try {
+      version = new Version.parse(versionString);
+      versions[version] = path;
+    } catch (e) {
+    }
+  }
+
+  var keys = versions.keys.toList();
+  keys.sort((a, b) => b.compareTo(a));
+  for (var key in keys) {
+    var path = versions[key];
+    if (FileUtils.testfile(path, "exists")) {
+      return pathos.normalize(path);
+    }
+  }
+
+  return null;
+}
+
+String _pathToPosix(String path) {
+  if (Platform.isWindows) {
+    return path.replaceAll("\\", "/");
+  }
+
+  return path;
 }
