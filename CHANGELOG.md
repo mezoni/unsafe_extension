@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Fixed typo in REAMDE.md file
+
 ## 0.0.3
 
 - Modified the setup procedure. Installer now finds the latest version of package in cache and setup it.
