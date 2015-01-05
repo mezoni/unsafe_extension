@@ -1,5 +1,5 @@
 name: unsafe_extension
-version: 0.0.1
+version: 0.0.2
 author: Andrew Mezoni <andrew.mezoni@gmail.com>
 description: Library for performing operations on the unmanaged native code and data.
 homepage: https://github.com/mezoni/unsafe_extension
