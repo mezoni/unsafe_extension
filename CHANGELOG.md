@@ -1,6 +1,6 @@
 ## 0.0.4
 
-- Fixed typo in REAMDE.md file
+- Renamed function `call` to `callFunction` in class `ForeignFucntionInterface`
 
 ## 0.0.3
 

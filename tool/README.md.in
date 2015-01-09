@@ -17,15 +17,17 @@ $ pub global activate unsafe_extension
 
 **Setup**
 
+```
 $ pub global run unsafe_extension:setup
+```
 
 **Alternative setup**
 
+```
 $ cd PUB_CACHE/global_packages
-
-$ cd unsafe_extension
-  
+$ cd unsafe_extension  
 $ dart --enable_async bin/setup.dart.snapshot
+```
 
 **Precompiled binaries**  
 
@@ -33,3 +35,8 @@ $ dart --enable_async bin/setup.dart.snapshot
 - X86 Windows
 - X86_64 Linux
 - X86_64 Windows
+
+**Wanted**
+
+Precompiled binary for X86_32 Macos `libunsafe_extension.dylib`  
+Precompiled binary for X86_64 Macos `libunsafe_extension.dylib`

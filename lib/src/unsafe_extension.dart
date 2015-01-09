@@ -6,7 +6,7 @@ import 'dart-ext:unsafe_extension';
  * Wrapper to "libffi" dynamic library.
  */
 class ForeignFucntionInterface {
-  static void call(int addr, int cif, int fn, int rvalue, int avalue) {
+  static void callFunction(int addr, int cif, int fn, int rvalue, int avalue) {
     if (addr == null) {
       throw new ArgumentError.notNull("addr");
     }
