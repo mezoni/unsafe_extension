@@ -33,10 +33,7 @@ $ dart --enable_async bin/setup.dart.snapshot
 
 - X86 Linux
 - X86 Windows
+- X86 Mac OS
 - X86_64 Linux
 - X86_64 Windows
-
-**Wanted**
-
-Precompiled binary for X86_32 Macos `libunsafe_extension.dylib`  
-Precompiled binary for X86_64 Macos `libunsafe_extension.dylib`
+- X86_64 Mac OS
