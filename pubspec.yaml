@@ -1,13 +1,16 @@
 name: unsafe_extension
-version: 0.0.4
+version: 0.0.5
 author: Andrew Mezoni <andrew.mezoni@gmail.com>
 description: Library for performing operations on the unmanaged native code and data.
 homepage: https://github.com/mezoni/unsafe_extension
-dependencies:
+dev_dependencies:
+  barback: any
   build_tools: any
   ccompilers: any
   path: any
-  pub_semver: any
   system_info: any
-dev_dependencies:
   unittest: any
+transformers:
+- unsafe_extension: {}
+- $dart2js:
+    $exclude: '**'

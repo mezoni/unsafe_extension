@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Added compiled binaries for Mac OS X
+
 ## 0.0.4
 
 - Renamed function `call` to `callFunction` in class `ForeignFucntionInterface`
