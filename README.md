@@ -3,7 +3,7 @@ unsafe_extension
 
 Library for performing operations on the unmanaged native code and data.
 
-Version: 0.0.5
+Version: 0.0.6
 
 **Installation**
 
