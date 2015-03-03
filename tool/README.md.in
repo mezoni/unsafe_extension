@@ -7,6 +7,8 @@ Version: {{VERSION}}
 
 **Installation**
 
+Go to any application that uses `unsafe_extension` and run
+
 ```
 $ pub global activate unsafe_extension
 ```

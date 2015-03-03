@@ -1,3 +1,7 @@
+## 0.0.7
+
+- Fixed bug with installation transformer
+
 ## 0.0.5
 
 - Added compiled binaries for Mac OS X

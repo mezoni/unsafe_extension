@@ -18,26 +18,36 @@ class NativeExtensionBuilder extends Transformer {
 
   String get allowedExtensions => EXT;
 
-  dynamic apply(Transform transform) {
+  dynamic apply(Transform transform) async {
     var id = transform.primaryInput.id;
     if (id.package != PACKAGE) {
       return null;
     }
 
-    var path = id.path;
-    if (lib_path.basename(path) != "$PACKAGE$EXT") {
+    var filepath = id.path;
+    if (lib_path.basename(filepath) != "$PACKAGE$EXT") {
       return null;
     }
 
     var cwd = Directory.current.path;
     try {
-      FileUtils.chdir(lib_path.dirname(path));
+      var path = _resolvePackagePath(filepath);
+      FileUtils.chdir(path);
       var installer = new Installer();
-      installer.install([]);
+      await installer.install([]);
     } finally {
       FileUtils.chdir(cwd);
     }
 
     return null;
+  }
+
+  // This is incorrect but there is no other way
+  String _resolvePackagePath(String filepath) {
+    var cwd = Directory.current.path;
+    var path = lib_path.join(cwd, "packages", PACKAGE);
+    path = new Link(path).resolveSymbolicLinksSync();
+    path = lib_path.dirname(path);
+    return path;
   }
 }

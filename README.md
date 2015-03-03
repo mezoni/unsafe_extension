@@ -3,9 +3,11 @@ unsafe_extension
 
 Library for performing operations on the unmanaged native code and data.
 
-Version: 0.0.6
+Version: 0.0.7
 
 **Installation**
+
+Go to any application that uses `unsafe_extension` and run
 
 ```
 $ pub global activate unsafe_extension
