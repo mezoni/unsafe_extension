@@ -362,6 +362,11 @@ void Unsafe_VirtualMemoryAllocate(Dart_NativeArguments arguments) {
   Dart_GetNativeIntegerArgument(arguments, 0, &size);
 #ifdef _WIN32
   address = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_NOACCESS);
+#elif defined(__APPLE__)
+  address = mmap(NULL, size, PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  if(address == MAP_FAILED) {
+    address = NULL;
+  }
 #else
   address = mmap(NULL, size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if(address == MAP_FAILED) {
