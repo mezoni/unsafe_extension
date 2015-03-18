@@ -1,3 +1,7 @@
+## 0.0.8
+
+- Fixes for Mac OSX
+
 ## 0.0.7
 
 - Fixed bug with installation transformer
