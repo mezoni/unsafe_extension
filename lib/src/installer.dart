@@ -158,13 +158,16 @@ class Installer {
         args.add("-m${bits}");
       }
 
-      return compiler.compile(t.sources, arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
+      return compiler.compile(t.sources,
+          arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
     });
 
     // Compile on Windows
     rule("%.obj", ["%.cc"], (Target t, Map args) {
       var compiler = new MsCppCompiler(bits: bits);
-      return compiler.compile(t.sources, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
+      var args = ["/EHsc"];
+      return compiler.compile(t.sources,
+          arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
     });
 
     // Link on Linux
