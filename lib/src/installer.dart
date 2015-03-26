@@ -65,7 +65,7 @@ class Installer {
         break;
       default:
         print("Unsupported operating system: $os");
-        exit(-1);
+        exit(1);
     }
 
     // C++ files
@@ -163,7 +163,7 @@ class Installer {
     // Link on Macos
     file(LIBNAME_MACOS, objFiles, (Target t, Map args) {
       var linker = new GnuLinker(bits: bits);
-      var args = ['-dynamiclib', '-undefined', '-dynamic_lookup'];
+      var args = ['-dynamiclib', '-undefined', 'suppress', '-flat_namespace'];
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
