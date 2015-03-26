@@ -1,11 +1,13 @@
 library unsafe_extension.unsafe_extension;
 
+import "dart:io" show RandomAccessFile;
+
 import 'dart-ext:unsafe_extension';
 
 /**
  * Wrapper to "libffi" dynamic library.
  */
-class ForeignFucntionInterface {
+class ForeignFunctionInterface {
   static void callFunction(int addr, int cif, int fn, int rvalue, int avalue) {
     if (addr == null) {
       throw new ArgumentError.notNull("addr");
@@ -1012,6 +1014,11 @@ class Unsafe {
   static void _writeUint64(int base, int offset, int value) native 'Unsafe_WriteUInt64';
 
   static void _writeUint8(int base, int offset, int value) native 'Unsafe_WriteUInt8';
+
+  /**
+   * Gets the File Descriptor Associated with the specified [raf].
+   */
+  static int getFileDescriptor(RandomAccessFile raf) native 'GetFileDescriptor';
 }
 
 // TODO: Remove
@@ -1079,3 +1086,4 @@ class _VirtualMemory {
 
   static bool _protect(int address, int size, int protection) native 'Unsafe_VirtualMemoryProtect';
 }
+
