@@ -1,3 +1,7 @@
+## 0.0.9
+
+- Added the handler `Segmentation Fault` with a post mortem stack trace. Unfortunately it doesn't not work on Windows because setting up the handler  correctly requires a `main` thread of the process
+
 ## 0.0.8
 
 - Fixes for Mac OSX
