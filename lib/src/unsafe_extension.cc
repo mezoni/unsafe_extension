@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #include "windows.h"
@@ -13,7 +14,26 @@
 
 #include "dart_api.h"
 
+Dart_Handle HandleError(Dart_Handle handle);
+
 Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_scope);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void sigsegv_signal(int signum) {
+  Dart_Handle error;
+
+  error = Dart_NewUnhandledExceptionError(Dart_NewStringFromCString("Segmentation fault"));
+  HandleError(error);
+  signal(signum, SIG_DFL);
+  exit(139);
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 DART_EXPORT Dart_Handle unsafe_extension_Init(Dart_Handle parent_library) {
   Dart_Handle result_code;
@@ -26,6 +46,8 @@ DART_EXPORT Dart_Handle unsafe_extension_Init(Dart_Handle parent_library) {
   if(Dart_IsError(result_code)) {
     return result_code;
   }
+
+  signal(SIGSEGV, sigsegv_signal);
 
   return Dart_Null();
 }
