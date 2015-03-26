@@ -13,7 +13,7 @@ import "package:system_info/system_info.dart";
 
 class Installer {
   Future install(List<String> arguments) async {
-    if(arguments == null) {
+    if (arguments == null) {
       throw new ArgumentError.notNull("arguments");
     }
 
@@ -26,7 +26,7 @@ class Installer {
     }
   }
 
-  Future _install(List<String> args) async {
+  Future _install(List<String> margs) async {
     const String PROJECT_NAME = "unsafe_extension";
     const String LIBNAME_LINUX = "lib$PROJECT_NAME.so";
     const String LIBNAME_MACOS = "lib$PROJECT_NAME.dylib";
@@ -37,6 +37,10 @@ class Installer {
 
     // Setup Dart SDK bitness for native extension
     var bits = DartSDK.getVmBits();
+
+    if (Platform.environment.containsKey("BUILD_BITS")) {
+      bits = int.parse(Platform.environment["BUILD_BITS"]);
+    }
 
     // Compiler options
     var compilerDefine = {};
@@ -86,6 +90,11 @@ class Installer {
       print("Setup $libname.");
       var architecture = SysInfo.processors.first.architecture;
       var bitness = SysInfo.userSpaceBitness;
+
+      if (Platform.environment.containsKey("BUILD_BITS")) {
+        bitness = int.parse(Platform.environment["BUILD_BITS"]);
+      }
+
       switch (architecture) {
         case ProcessorArchitecture.X86_64:
           if (bitness == 32) {
@@ -144,6 +153,11 @@ class Installer {
     rule("%.o", ["%.cc"], (Target t, Map args) {
       var compiler = new GnuCppCompiler(bits: bits);
       var args = ['-fPIC', '-Wall'];
+
+      if (SysInfo.userSpaceBitness != bits) {
+        args.add("-m${bits}");
+      }
+
       return compiler.compile(t.sources, arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
     });
 
@@ -157,6 +171,9 @@ class Installer {
     file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
       var linker = new GnuLinker(bits: bits);
       var args = ['-shared'];
+      if (SysInfo.userSpaceBitness != bits) {
+        args.add("-m${bits}");
+      }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
@@ -164,6 +181,9 @@ class Installer {
     file(LIBNAME_MACOS, objFiles, (Target t, Map args) {
       var linker = new GnuLinker(bits: bits);
       var args = ['-dynamiclib', '-undefined', 'suppress', '-flat_namespace'];
+      if (SysInfo.userSpaceBitness != bits) {
+        args.add("-m${bits}");
+      }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
@@ -174,6 +194,6 @@ class Installer {
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
-    return new BuildShell().run(args);
+    return new BuildShell().run(margs);
   }
 }
