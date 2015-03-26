@@ -586,16 +586,6 @@ void Unsafe_FfiPrepCif(Dart_NativeArguments arguments) {
   Dart_SetReturnValue(arguments, Dart_NewInteger(status));
 }
 
-void GetFileDescriptor(Dart_NativeArguments arguments) {
-  Dart_Handle raf = HandleError(Dart_GetNativeArgument(arguments, 0));
-  Dart_Handle id = HandleError(Dart_GetField(raf, Dart_NewStringFromCString("_id")));
-  Dart_Handle *args = {&id};
-  Dart_Handle type = HandleError(Dart_InstanceGetType(raf));
-  Dart_Handle result = HandleError(Dart_Invoke(type, Dart_NewStringFromCString("_getFD"), 1, args));
-
-  Dart_SetReturnValue(arguments, result);
-}
-
 void Unsafe_FfiPrepCifVar(Dart_NativeArguments arguments) {
   int64_t abi;
   int64_t addr;
@@ -677,8 +667,6 @@ struct FunctionLookup function_list[] = {
   {"Unsafe_FfiCall", Unsafe_FfiCall},
   {"Unsafe_FfiPrepCif", Unsafe_FfiPrepCif},
   {"Unsafe_FfiPrepCifVar", Unsafe_FfiPrepCifVar},
-
-  {"GetFileDescriptor", GetFileDescriptor},
 
   {NULL, NULL}};
 
