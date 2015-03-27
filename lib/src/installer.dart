@@ -53,6 +53,7 @@ class Installer {
     var libname = "";
     var objExtension = "";
     switch (os) {
+      case "android":
       case "linux":
         libname = LIBNAME_LINUX;
         objExtension = ".o";
@@ -104,6 +105,10 @@ class Installer {
           break;
         case ProcessorArchitecture.X86:
           break;
+
+        case ProcessorArchitecture.ARM:
+          break;
+
         default:
           print("Unsupported processor architecture: $architecture");
           return -1;
