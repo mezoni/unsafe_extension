@@ -97,6 +97,40 @@ class Installer {
         bits = null;
       }
 
+      if (args.containsKey("arch")) {
+        var arch = args["arch"];
+
+        if (arch == null) {
+          arch = SysInfo.processors.first.architecture.name;
+        } else {
+          arch = arch.trim.toUpperCase();
+        }
+
+        switch (arch) {
+          case "AARCH64":
+            architecture = ProcessorArchitecture.AARCH64;
+            break;
+          case "ARM":
+            architecture = ProcessorArchitecture.ARM;
+            break;
+          case "IA64":
+            architecture = ProcessorArchitecture.IA64;
+            break;
+          case "MIPS":
+            architecture = ProcessorArchitecture.MIPS;
+            break;
+          case "X86":
+            architecture = ProcessorArchitecture.X86;
+            break;
+          case "X86_64":
+            architecture = ProcessorArchitecture.X86_64;
+            break;
+          default:
+            architecture = ProcessorArchitecture.UNKNOWN;
+            break;
+        }
+      }
+
       switch (architecture) {
         case ProcessorArchitecture.X86_64:
           if (bitness == 32) {
