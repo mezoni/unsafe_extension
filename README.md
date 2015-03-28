@@ -3,7 +3,7 @@ unsafe_extension
 
 Library for performing operations on the unmanaged native code and data.
 
-Version: 0.0.10
+Version: 0.0.11
 
 **Installation**
 
@@ -15,6 +15,7 @@ $ pub global activate unsafe_extension
 
 **Precompiled binaries**  
 
+- ARM Android
 - X86 Linux
 - X86 Windows
 - X86_64 Linux
@@ -22,5 +23,7 @@ $ pub global activate unsafe_extension
 - X86_64 Windows
 
 Special thanks to [Kenneth Endfinger](https://github.com/kaendfinger) for compiling the binaries:
-- X86_64 Mac OS X
+
 - ARM Android
+- ARM Linux
+- X86_64 Mac OS X

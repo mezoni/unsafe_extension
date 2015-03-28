@@ -1,3 +1,7 @@
+## 0.0.11
+
+- Initial support of Linux (ARM). Author [Kenneth Endfinger](https://github.com/kaendfinger)
+
 ## 0.0.10
 
 - Initial support of Android (ARM). Author [Kenneth Endfinger](https://github.com/kaendfinger)
