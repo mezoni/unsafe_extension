@@ -90,8 +90,10 @@ class Installer {
       var bitness = SysInfo.userSpaceBitness;
 
       if (args.containsKey("bits")) {
-        bitness = args["bits"];
-        bits = args["bits"];
+        var b = args["bits"];
+        b = b != null ? int.parse(b) : b;
+        bitness = b;
+        bits = b;
       } else if (architecture == ProcessorArchitecture.ARM) {
         bitness = null;
         bits = null;
