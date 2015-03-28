@@ -103,7 +103,7 @@ class Installer {
         if (arch == null) {
           arch = SysInfo.processors.first.architecture.name;
         } else {
-          arch = arch.trim.toUpperCase();
+          arch = arch.trim().toUpperCase();
         }
 
         switch (arch) {
