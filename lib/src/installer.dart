@@ -42,6 +42,10 @@ class Installer {
       bits = int.parse(Platform.environment["BUILD_BITS"]);
     }
 
+    if (Platform.environment.containsKey("BUILD_NULLBITS")) {
+      bits = null;
+    }
+
     // Compiler options
     var compilerDefine = {};
     var compilerInclude = ["$DART_SDK/include"];
@@ -86,14 +90,19 @@ class Installer {
     // Target: default
     target("default", ["setup"], null, description: "setup");
 
+    var architecture = SysInfo.processors.first.architecture;
+
     // Setup
     target("setup", [], (Target t, Map args) async {
       print("Setup $libname.");
-      var architecture = SysInfo.processors.first.architecture;
       var bitness = SysInfo.userSpaceBitness;
 
       if (Platform.environment.containsKey("BUILD_BITS")) {
         bitness = int.parse(Platform.environment["BUILD_BITS"]);
+      }
+
+      if (Platform.environment.containsKey("BUILD_NULLBITS")) {
+        bitness = null;
       }
 
       switch (architecture) {
@@ -159,7 +168,7 @@ class Installer {
       var compiler = new GnuCppCompiler(bits: bits);
       var args = ['-fPIC', '-Wall'];
 
-      if (SysInfo.userSpaceBitness != bits) {
+      if (SysInfo.userSpaceBitness != bits && architecture != ProcessorArchitecture.ARM) {
         args.add("-m${bits}");
       }
 
@@ -179,7 +188,7 @@ class Installer {
     file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
       var linker = new GnuLinker(bits: bits);
       var args = ['-shared'];
-      if (SysInfo.userSpaceBitness != bits) {
+      if (SysInfo.userSpaceBitness != bits && architecture != ProcessorArchitecture.ARM) {
         args.add("-m${bits}");
       }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
