@@ -38,14 +38,6 @@ class Installer {
     // Setup Dart SDK bitness for native extension
     var bits = DartSDK.getVmBits();
 
-    if (Platform.environment.containsKey("BUILD_BITS")) {
-      bits = int.parse(Platform.environment["BUILD_BITS"]);
-    }
-
-    if (Platform.environment.containsKey("BUILD_NULLBITS")) {
-      bits = null;
-    }
-
     // Compiler options
     var compilerDefine = {};
     var compilerInclude = ["$DART_SDK/include"];
@@ -97,12 +89,12 @@ class Installer {
       print("Setup $libname.");
       var bitness = SysInfo.userSpaceBitness;
 
-      if (Platform.environment.containsKey("BUILD_BITS")) {
-        bitness = int.parse(Platform.environment["BUILD_BITS"]);
-      }
-
-      if (Platform.environment.containsKey("BUILD_NULLBITS")) {
+      if (args.containsKey("bits")) {
+        bitness = args["bits"];
+        bits = args["bits"];
+      } else if (architecture == ProcessorArchitecture.ARM) {
         bitness = null;
+        bits = null;
       }
 
       switch (architecture) {
