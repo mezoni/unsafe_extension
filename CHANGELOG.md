@@ -1,3 +1,8 @@
+## 0.0.10
+
+- Initial support of Android (ARM). Author [Kenneth Endfinger](https://github.com/kaendfinger)
+- Removed support of Mac OS X (X86)
+
 ## 0.0.9
 
 - Added the handler `Segmentation Fault` with a post mortem stack trace. Unfortunately it doesn't not work on Windows because setting up the handler  correctly requires a `main` thread of the process
