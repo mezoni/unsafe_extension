@@ -26,6 +26,8 @@ class Installer {
     }
   }
 
+  bool _passBits = true;
+
   Future _install(List<String> margs) async {
     const String PROJECT_NAME = "unsafe_extension";
     const String LIBNAME_LINUX = "lib$PROJECT_NAME.so";
@@ -89,48 +91,34 @@ class Installer {
       print("Setup $libname.");
       var bitness = SysInfo.userSpaceBitness;
 
-      if (args.containsKey("bits")) {
-        var b = args["bits"];
-        b = b != null ? int.parse(b) : b;
-        bitness = b;
-        bits = b;
-      } else if (architecture == ProcessorArchitecture.ARM) {
-        bitness = null;
-        bits = null;
+      var arch = SysInfo.processors.first.architecture.name;
+
+      if (args.containsKey("arch") && args["arch"] != null) {
+        arch = arch.trim().toUpperCase();
       }
 
-      if (args.containsKey("arch")) {
-        var arch = args["arch"];
-
-        if (arch == null) {
-          arch = SysInfo.processors.first.architecture.name;
-        } else {
-          arch = arch.trim().toUpperCase();
-        }
-
-        switch (arch) {
-          case "AARCH64":
-            architecture = ProcessorArchitecture.AARCH64;
-            break;
-          case "ARM":
-            architecture = ProcessorArchitecture.ARM;
-            break;
-          case "IA64":
-            architecture = ProcessorArchitecture.IA64;
-            break;
-          case "MIPS":
-            architecture = ProcessorArchitecture.MIPS;
-            break;
-          case "X86":
-            architecture = ProcessorArchitecture.X86;
-            break;
-          case "X86_64":
-            architecture = ProcessorArchitecture.X86_64;
-            break;
-          default:
-            architecture = ProcessorArchitecture.UNKNOWN;
-            break;
-        }
+      switch (arch) {
+        case "AARCH64":
+          architecture = ProcessorArchitecture.AARCH64;
+          break;
+        case "ARM":
+          architecture = ProcessorArchitecture.ARM;
+          break;
+        case "IA64":
+          architecture = ProcessorArchitecture.IA64;
+          break;
+        case "MIPS":
+          architecture = ProcessorArchitecture.MIPS;
+          break;
+        case "X86":
+          architecture = ProcessorArchitecture.X86;
+          break;
+        case "X86_64":
+          architecture = ProcessorArchitecture.X86_64;
+          break;
+        default:
+          architecture = ProcessorArchitecture.UNKNOWN;
+          break;
       }
 
       switch (architecture) {
@@ -144,6 +132,7 @@ class Installer {
           break;
 
         case ProcessorArchitecture.ARM:
+          _passBits = false;
           break;
 
         default:
@@ -172,7 +161,7 @@ class Installer {
     }, description: "Setup '$PROJECT_NAME'");
 
     // Target: build
-    target("build", ["clean_all", "compile_link", "clean"], (Target t, Map args) {
+    target("build", ["clean_all", "compile_link", "clean"], (Target t, Map targs) {
       print("The ${t.name} successful.");
     }, description: "Build '$PROJECT_NAME'");
 
@@ -182,7 +171,7 @@ class Installer {
     }, description: "Compile and link '$PROJECT_NAME'");
 
     // Target: clean
-    target("clean", [], (Target t, Map args) {
+    target("clean", [], (Target t, Map targs) {
       FileUtils.rm(["*.exp", "*.lib", "*.o", "*.obj"], force: true);
     }, description: "Deletes all intermediate files", reusable: true);
 
@@ -192,48 +181,48 @@ class Installer {
     }, description: "Deletes all intermediate and output files", reusable: true);
 
     // Compile on Posix
-    rule("%.o", ["%.cc"], (Target t, Map args) {
+    rule("%.o", ["%.cc"], (Target t, Map targs) {
       var compiler = new GnuCppCompiler(bits: bits);
       var args = ['-fPIC', '-Wall'];
 
-      if (SysInfo.userSpaceBitness != bits && architecture != ProcessorArchitecture.ARM) {
+      if (_passBits) {
         args.add("-m${bits}");
       }
 
       return compiler.compile(t.sources,
-          arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
+      arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
     });
 
     // Compile on Windows
-    rule("%.obj", ["%.cc"], (Target t, Map args) {
+    rule("%.obj", ["%.cc"], (Target t, Map targs) {
       var compiler = new MsCppCompiler(bits: bits);
       var args = ["/EHsc"];
       return compiler.compile(t.sources,
-          arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
+      arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
     });
 
     // Link on Linux
-    file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
+    file(LIBNAME_LINUX, objFiles, (Target t, Map targs) {
       var linker = new GnuLinker(bits: bits);
       var args = ['-shared'];
-      if (SysInfo.userSpaceBitness != bits && architecture != ProcessorArchitecture.ARM) {
+      if (_passBits) {
         args.add("-m${bits}");
       }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
     // Link on Macos
-    file(LIBNAME_MACOS, objFiles, (Target t, Map args) {
+    file(LIBNAME_MACOS, objFiles, (Target t, Map targs) {
       var linker = new GnuLinker(bits: bits);
       var args = ['-dynamiclib', '-undefined', 'suppress', '-flat_namespace'];
-      if (SysInfo.userSpaceBitness != bits) {
+      if (_passBits) {
         args.add("-m${bits}");
       }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
     // Link on Windows
-    file(LIBNAME_WINDOWS, objFiles, (Target t, Map args) {
+    file(LIBNAME_WINDOWS, objFiles, (Target t, Map targs) {
       var linker = new MsLinker(bits: bits);
       var args = ['/DLL', 'dart.lib'];
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
