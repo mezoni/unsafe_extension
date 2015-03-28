@@ -89,7 +89,6 @@ class Installer {
     // Setup
     target("setup", [], (Target t, Map args) async {
       print("Setup $libname.");
-      var bitness = SysInfo.userSpaceBitness;
 
       var arch = SysInfo.processors.first.architecture.name;
 
@@ -112,9 +111,16 @@ class Installer {
           break;
         case "X86":
           architecture = ProcessorArchitecture.X86;
+          bits = 32;
           break;
         case "X86_64":
           architecture = ProcessorArchitecture.X86_64;
+
+          if (bits == 32) { // 32-bit VM with 64-bit Architecture
+            architecture = ProcessorArchitecture.X86;
+          } else {
+            bits = 64;
+          }
           break;
         default:
           architecture = ProcessorArchitecture.UNKNOWN;
@@ -123,18 +129,12 @@ class Installer {
 
       switch (architecture) {
         case ProcessorArchitecture.X86_64:
-          if (bitness == 32) {
-            architecture = ProcessorArchitecture.X86;
-          }
-
           break;
         case ProcessorArchitecture.X86:
           break;
-
         case ProcessorArchitecture.ARM:
           _passBits = false;
           break;
-
         default:
           print("Unsupported processor architecture: $architecture");
           return -1;
@@ -182,12 +182,8 @@ class Installer {
 
     // Compile on Posix
     rule("%.o", ["%.cc"], (Target t, Map targs) {
-      var compiler = new GnuCppCompiler(bits: bits);
+      var compiler = new GnuCppCompiler(bits: _passBits ? null : bits);
       var args = ['-fPIC', '-Wall'];
-
-      if (_passBits) {
-        args.add("-m${bits}");
-      }
 
       return compiler.compile(t.sources,
       arguments: args, define: compilerDefine, include: compilerInclude, output: t.name).exitCode;
@@ -203,21 +199,15 @@ class Installer {
 
     // Link on Linux
     file(LIBNAME_LINUX, objFiles, (Target t, Map targs) {
-      var linker = new GnuLinker(bits: bits);
+      var linker = new GnuLinker(bits: _passBits ? null : bits);
       var args = ['-shared'];
-      if (_passBits) {
-        args.add("-m${bits}");
-      }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
     // Link on Macos
     file(LIBNAME_MACOS, objFiles, (Target t, Map targs) {
-      var linker = new GnuLinker(bits: bits);
+      var linker = new GnuLinker(bits: _passBits ? null : bits);
       var args = ['-dynamiclib', '-undefined', 'suppress', '-flat_namespace'];
-      if (_passBits) {
-        args.add("-m${bits}");
-      }
       return linker.link(t.sources, arguments: args, libpaths: linkerLibpath, output: t.name).exitCode;
     });
 
