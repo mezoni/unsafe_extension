@@ -16,6 +16,7 @@ $ pub global activate unsafe_extension
 **Precompiled binaries**  
 
 - ARM Android
+- ARM Linux
 - X86 Linux
 - X86 Windows
 - X86_64 Linux
