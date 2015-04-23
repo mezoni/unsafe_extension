@@ -32,6 +32,9 @@ class Installer {
     const String LIBNAME_MACOS = "lib$PROJECT_NAME.dylib";
     const String LIBNAME_WINDOWS = "$PROJECT_NAME.dll";
 
+    // Reset because can be used multiple times (by transformers)
+    Builder.reset();
+
     // Determine operating system
     var operatingSystem = Platform.operatingSystem;
 
