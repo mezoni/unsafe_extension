@@ -14,7 +14,11 @@ class NativeExtensionBuilder extends Transformer {
 
   final BarbackSettings _settings;
 
-  NativeExtensionBuilder.asPlugin(this._settings);
+  String _workingDirectory;
+
+  NativeExtensionBuilder.asPlugin(this._settings) {
+    _workingDirectory = Directory.current.path;
+  }
 
   String get allowedExtensions => EXT;
 
@@ -29,14 +33,13 @@ class NativeExtensionBuilder extends Transformer {
       return null;
     }
 
-    var cwd = Directory.current.path;
     try {
       var path = _resolvePackagePath(filepath);
       FileUtils.chdir(path);
       var installer = new Installer();
       await installer.install([]);
     } finally {
-      FileUtils.chdir(cwd);
+      FileUtils.chdir(_workingDirectory);
     }
 
     return null;
@@ -44,8 +47,7 @@ class NativeExtensionBuilder extends Transformer {
 
   // This is incorrect but there is no other way
   String _resolvePackagePath(String filepath) {
-    var cwd = Directory.current.path;
-    var path = lib_path.join(cwd, "packages", PACKAGE);
+    var path = lib_path.join(_workingDirectory, "packages", PACKAGE);
     path = new Link(path).resolveSymbolicLinksSync();
     path = lib_path.dirname(path);
     return path;
