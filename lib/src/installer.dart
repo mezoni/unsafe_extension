@@ -97,7 +97,12 @@ class Installer {
       }
 
       var result = await Builder.current.build("build", arguments: args);
+      if (result != 0) {
+        return result;
+      }
+
       var file = new File(libname);
+      new File(compiled).createSync(recursive: true);
       file.copySync(compiled);
       print("The ${t.name} successful.");
     }, description: "Setup '$PROJECT_NAME'");

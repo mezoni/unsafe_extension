@@ -1,3 +1,7 @@
+## 0.0.14
+
+- Breaking changes: class `ForeignFunctionInterface` was removed
+
 ## 0.0.11
 
 - Initial support of Linux (ARM). Author [Kenneth Endfinger](https://github.com/kaendfinger)

@@ -9,7 +9,6 @@
 #else
 #include <dlfcn.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #endif
 
 #include "dart_api.h"
@@ -159,10 +158,13 @@ void Unsafe_MemorySet(Dart_NativeArguments arguments) {
 /*---------------------------------------------------------------------------*/
 
 void Unsafe__ObjectPeerFinalizer(void* isolate_callback_data, Dart_WeakPersistentHandle handle, void *peer) {
-  free(peer);
+  if (peer != NULL) {
+    free(peer);
+  }  
 }
 
 void Unsafe_PeerRegister(Dart_NativeArguments arguments) {
+  Dart_WeakPersistentHandle dh_handle;
   Dart_Handle dh_object;
   int64_t peer;
   int64_t size;
@@ -170,7 +172,8 @@ void Unsafe_PeerRegister(Dart_NativeArguments arguments) {
   dh_object = Dart_GetNativeArgument(arguments, 0);
   Dart_GetNativeIntegerArgument(arguments, 1, &peer);
   Dart_GetNativeIntegerArgument(arguments, 2, &size);
-  Dart_NewWeakPersistentHandle(dh_object, (void*)peer, size, Unsafe__ObjectPeerFinalizer);
+  dh_handle = Dart_NewWeakPersistentHandle(dh_object, (void*)peer, size, Unsafe__ObjectPeerFinalizer);
+  Dart_SetReturnValue(arguments, Dart_NewInteger((int64_t)dh_handle));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -376,242 +379,6 @@ void Unsafe_LibrarySymbol(Dart_NativeArguments arguments) {
 
 /*---------------------------------------------------------------------------*/
 
-void Unsafe_VirtualMemoryAllocate(Dart_NativeArguments arguments) {
-  void* address;
-  Dart_Handle dh_result;
-  int64_t size;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &size);
-#ifdef _WIN32
-  address = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_NOACCESS);
-#elif defined(__APPLE__)
-  address = mmap(NULL, size, PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0);
-  if(address == MAP_FAILED) {
-    address = NULL;
-  }
-#else
-  address = mmap(NULL, size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if(address == MAP_FAILED) {
-    address = NULL;
-  }
-#endif
-  if(address == NULL) {
-    dh_result = Dart_Null();
-  } else {
-    dh_result = Dart_NewInteger((int64_t)address);
-  }
-
-  Dart_SetReturnValue(arguments, dh_result);
-}
-
-Dart_Handle Unsafe__VirtualMemoryFree(int64_t address, int64_t size) {
-  Dart_Handle dh_result;
-
-  dh_result = Dart_Null();
-#ifdef _WIN32
-  if(VirtualFree((LPVOID)(intptr_t)address, 0, MEM_RELEASE) == 0) {
-    dh_result = Dart_NewApiError("VirtualMemoryFree failed");
-  }
-#else
-  if(munmap((void*)address, size) != 0) {
-    dh_result = Dart_NewApiError("VirtualMemoryFree failed");
-  }
-#endif
-  return dh_result;
-}
-
-void Unsafe_VirtualMemoryFree(Dart_NativeArguments arguments) {
-  int64_t address;
-  Dart_Handle dh_result;
-  int64_t size;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &address);
-  Dart_GetNativeIntegerArgument(arguments, 1, &size);
-  dh_result = Unsafe__VirtualMemoryFree(address, size);
-  HandleError(dh_result);
-  Dart_SetReturnValue(arguments, dh_result);
-}
-
-struct VirtualMemoryInfo {
-  int64_t address;
-  int64_t size;
-};
-
-void Unsafe__ObjectVirtualPeerFinalizer(void* isolate_callback_data, Dart_WeakPersistentHandle handle, void *peer) {
-  Dart_Handle dh_result;
-  struct VirtualMemoryInfo *vmi;
-
-  vmi = (VirtualMemoryInfo*)peer;
-  dh_result = Unsafe__VirtualMemoryFree(vmi->address, vmi->size);
-  free(peer);
-  HandleError(dh_result);
-}
-
-void Unsafe_VirtualMemoryPeer(Dart_NativeArguments arguments) {
-  int64_t address;
-  Dart_Handle dh_object;
-  int64_t size;
-  struct VirtualMemoryInfo *vmi;
-
-  dh_object = Dart_GetNativeArgument(arguments, 0);
-  Dart_GetNativeIntegerArgument(arguments, 1, &address);
-  Dart_GetNativeIntegerArgument(arguments, 2, &size);
-  vmi = (VirtualMemoryInfo*)malloc(sizeof(VirtualMemoryInfo));
-  vmi->address = address;
-  vmi->size = size;
-  Dart_NewWeakPersistentHandle(dh_object, vmi, size, Unsafe__ObjectVirtualPeerFinalizer);
-}
-
-#define UNSAFE_VIRTUAL_MEMORY_NO_ACCESS 1
-#define UNSAFE_VIRTUAL_MEMORY_READ_ONLY 2
-#define UNSAFE_VIRTUAL_MEMORY_READ_WRITE 3
-#define UNSAFE_VIRTUAL_MEMORY_READ_EXECUTE 4
-#define UNSAFE_VIRTUAL_MEMORY_READ_WRITE_EXECUTE 5
-
-void Unsafe_VirtualMemoryProtect(Dart_NativeArguments arguments) {
-  int64_t address;
-  Dart_Handle dh_result;
-#ifdef _WIN32
-  DWORD old_prot;
-#endif
-  int64_t prot;
-  int64_t size;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &address);
-  Dart_GetNativeIntegerArgument(arguments, 1, &size);
-  Dart_GetNativeIntegerArgument(arguments, 2, &prot);
-#ifdef _WIN32
-  old_prot = 0;
-  switch (prot) {
-    case UNSAFE_VIRTUAL_MEMORY_NO_ACCESS:
-      prot = PAGE_NOACCESS;
-      break;
-    case UNSAFE_VIRTUAL_MEMORY_READ_ONLY:
-      prot = PAGE_READONLY;
-      break;
-    case UNSAFE_VIRTUAL_MEMORY_READ_WRITE:
-      prot = PAGE_READWRITE;
-      break;
-    case UNSAFE_VIRTUAL_MEMORY_READ_EXECUTE:
-      prot = PAGE_EXECUTE_READ;
-      break;
-    case UNSAFE_VIRTUAL_MEMORY_READ_WRITE_EXECUTE:
-      prot = PAGE_EXECUTE_READWRITE;
-      break;
-  }
-
-  dh_result = Dart_NewBoolean(VirtualProtect((LPVOID)address, size, prot, &old_prot));
-#else
-  switch(prot) {
-    case UNSAFE_VIRTUAL_MEMORY_NO_ACCESS:
-    prot = PROT_NONE;
-    break;
-  case UNSAFE_VIRTUAL_MEMORY_READ_ONLY:
-    prot = PROT_READ;
-    break;
-  case UNSAFE_VIRTUAL_MEMORY_READ_WRITE:
-    prot = PROT_READ | PROT_WRITE;
-    break;
-  case UNSAFE_VIRTUAL_MEMORY_READ_EXECUTE:
-    prot = PROT_READ | PROT_EXEC;
-    break;
-  case UNSAFE_VIRTUAL_MEMORY_READ_WRITE_EXECUTE:
-    prot = PROT_READ | PROT_WRITE | PROT_EXEC;
-    break;
-  }
-
-  dh_result = Dart_NewBoolean(mprotect((void*)address, size, prot) == 0);
-#endif
-  Dart_SetReturnValue(arguments, dh_result);
-}
-
-#undef UNSAFE_VIRTUAL_MEMORY_NO_ACCESS
-#undef UNSAFE_VIRTUAL_MEMORY_READ_ONLY
-#undef UNSAFE_VIRTUAL_MEMORY_READ_WRITE
-#undef UNSAFE_VIRTUAL_MEMORY_READ_EXECUTE
-#undef UNSAFE_VIRTUAL_MEMORY_READ_WRITE_EXECUTE
-
-/*---------------------------------------------------------------------------*/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef void (*ffi_call)(void* cif, void* fn, void* rvalue, void* avalue);
-typedef int (*ffi_prep_cif)(void* cif, int abi, unsigned int nargs, void* rtype, void* atypes);
-typedef int (*ffi_prep_cif_var)(void* cif, int abi, unsigned int nfixedargs, unsigned int ntotalargs, void* rtype, void* atypes);
-
-#ifdef __cplusplus
-}
-#endif
-
-void Unsafe_FfiCall(Dart_NativeArguments arguments) {
-  int64_t addr;
-  int64_t avalue;
-  int64_t cif;
-  int64_t fn;
-  ffi_call func;
-  int64_t rvalue;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &addr);
-  Dart_GetNativeIntegerArgument(arguments, 1, &cif);
-  Dart_GetNativeIntegerArgument(arguments, 2, &fn);
-  Dart_GetNativeIntegerArgument(arguments, 3, &rvalue);
-  Dart_GetNativeIntegerArgument(arguments, 4, &avalue);
-
-  func = (ffi_call)addr;
-  (*func)((void*)cif, (void*)fn, (void*)rvalue, (void*)avalue);
-  Dart_SetReturnValue(arguments, Dart_Null());
-}
-
-void Unsafe_FfiPrepCif(Dart_NativeArguments arguments) {
-  int64_t abi;
-  int64_t addr;
-  int64_t atypes;
-  int64_t cif;
-  ffi_prep_cif func;
-  int64_t nargs;
-  int64_t rtype;
-  int status;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &addr);
-  Dart_GetNativeIntegerArgument(arguments, 1, &cif);
-  Dart_GetNativeIntegerArgument(arguments, 2, &abi);
-  Dart_GetNativeIntegerArgument(arguments, 3, &nargs);
-  Dart_GetNativeIntegerArgument(arguments, 4, &rtype);
-  Dart_GetNativeIntegerArgument(arguments, 5, &atypes);
-
-  func = (ffi_prep_cif)addr;
-  status = (*func)((void*)cif, (int)abi, (unsigned int)nargs, (void*)rtype, (void*)atypes);
-  Dart_SetReturnValue(arguments, Dart_NewInteger(status));
-}
-
-void Unsafe_FfiPrepCifVar(Dart_NativeArguments arguments) {
-  int64_t abi;
-  int64_t addr;
-  int64_t atypes;
-  int64_t cif;
-  ffi_prep_cif_var func;
-  int64_t nfixedargs;
-  int64_t ntotalargs;
-  int64_t rtype;
-  int status;
-
-  Dart_GetNativeIntegerArgument(arguments, 0, &addr);
-  Dart_GetNativeIntegerArgument(arguments, 1, &cif);
-  Dart_GetNativeIntegerArgument(arguments, 2, &abi);
-  Dart_GetNativeIntegerArgument(arguments, 3, &nfixedargs);
-  Dart_GetNativeIntegerArgument(arguments, 4, &ntotalargs);
-  Dart_GetNativeIntegerArgument(arguments, 5, &rtype);
-  Dart_GetNativeIntegerArgument(arguments, 6, &atypes);
-
-  func = (ffi_prep_cif_var)addr;
-  status = (*func)((void*)cif, (int)abi, (unsigned int)nfixedargs, (unsigned int)ntotalargs, (void*)rtype, (void*)atypes);
-  Dart_SetReturnValue(arguments, Dart_NewInteger(status));
-}
-
-/*---------------------------------------------------------------------------*/
-
 struct FunctionLookup {
   const char* name;
   Dart_NativeFunction function;
@@ -660,14 +427,6 @@ struct FunctionLookup function_list[] = {
   {"Unsafe_WriteFloat32", Unsafe_WriteFloat32},
   {"Unsafe_WriteFloat64", Unsafe_WriteFloat64},
 
-  {"Unsafe_VirtualMemoryAllocate", Unsafe_VirtualMemoryAllocate},
-  {"Unsafe_VirtualMemoryFree", Unsafe_VirtualMemoryFree},
-  {"Unsafe_VirtualMemoryProtect", Unsafe_VirtualMemoryProtect},
-
-  {"Unsafe_FfiCall", Unsafe_FfiCall},
-  {"Unsafe_FfiPrepCif", Unsafe_FfiPrepCif},
-  {"Unsafe_FfiPrepCifVar", Unsafe_FfiPrepCifVar},
-
   {NULL, NULL}};
 
 Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_scope) {
@@ -677,7 +436,7 @@ Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_sco
 
   if (!Dart_IsString(name)) {
     return NULL;
-  }
+  }  
 
   dh_result = NULL;
   HandleError(Dart_StringToCString(name, &cname));

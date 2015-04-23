@@ -3,101 +3,6 @@ library unsafe_extension.unsafe_extension;
 import 'dart-ext:unsafe_extension';
 
 /**
- * Wrapper to "libffi" dynamic library.
- */
-class ForeignFunctionInterface {
-  static void callFunction(int addr, int cif, int fn, int rvalue, int avalue) {
-    if (addr == null) {
-      throw new ArgumentError.notNull("addr");
-    }
-
-    if (cif == null) {
-      throw new ArgumentError.notNull("cif");
-    }
-
-    if (fn == null) {
-      throw new ArgumentError.notNull("fn");
-    }
-
-    if (rvalue == null) {
-      throw new ArgumentError.notNull("rvalue");
-    }
-
-    if (avalue == null) {
-      throw new ArgumentError.notNull("avalue");
-    }
-
-    _ffiCall(addr, cif, fn, rvalue, avalue);
-  }
-
-  static int prepareCallInterface(int addr, int cif, int abi, int nargs, int rtype, int atypes) {
-    if (addr == null) {
-      throw new ArgumentError.notNull("addr");
-    }
-
-    if (cif == null) {
-      throw new ArgumentError.notNull("cif");
-    }
-
-    if (abi == null) {
-      throw new ArgumentError.notNull("abi");
-    }
-
-    if (nargs == null) {
-      throw new ArgumentError.notNull("nargs");
-    }
-
-    if (rtype == null) {
-      throw new ArgumentError.notNull("rtype");
-    }
-
-    if (atypes == null) {
-      throw new ArgumentError.notNull("atypes");
-    }
-
-    return _ffiPrepCif(addr, cif, abi, nargs, rtype, atypes);
-  }
-
-  static int prepareCallInterfaceVariadic(int addr, int cif, int abi, int nfixedargs, int ntotalargs, int rtype, int atypes) {
-    if (addr == null) {
-      throw new ArgumentError.notNull("addr");
-    }
-
-    if (cif == null) {
-      throw new ArgumentError.notNull("cif");
-    }
-
-    if (abi == null) {
-      throw new ArgumentError.notNull("abi");
-    }
-
-    if (nfixedargs == null) {
-      throw new ArgumentError.notNull("nfixedargs");
-    }
-
-    if (ntotalargs == null) {
-      throw new ArgumentError.notNull("ntotalargs");
-    }
-
-    if (rtype == null) {
-      throw new ArgumentError.notNull("rtype");
-    }
-
-    if (atypes == null) {
-      throw new ArgumentError.notNull("atypes");
-    }
-
-    return _ffiPrepCifVar(addr, cif, abi, nfixedargs, ntotalargs, rtype, atypes);
-  }
-
-  static void _ffiCall(int addr, int cif, int fn, int rvalue, int avalue) native "Unsafe_FfiCall";
-
-  static int _ffiPrepCif(int addr, int cif, int abi, int nargs, int rtype, int atypes) native "Unsafe_FfiPrepCif";
-
-  static int _ffiPrepCifVar(int addr,int cif, int abi, int nfixedargs, int ntotalargs, int rtype, int atypes) native "Unsafe_FfiPrepCifVar";
-}
-
-/**
  * Memory block. Allocates memory when creating, frees memory when destroying.
  */
 class MemoryBlock {
@@ -110,7 +15,11 @@ class MemoryBlock {
 
   MemoryBlock(this.size) {
     if (size == null || size <= 0) {
-      throw new ArgumentError('size: $size');
+      throw new ArgumentError.notNull("size");
+    }
+
+    if (size <= 0) {
+      throw new ArgumentError.value(size, "size");
     }
 
     _address = Unsafe.memoryAllocate(size);
@@ -155,7 +64,7 @@ class Unsafe {
    */
   static int libraryFree(int handle) {
     if (handle == null) {
-      throw new ArgumentError('handle: $handle');
+      throw new ArgumentError.notNull("handle");
     }
 
     return _libraryFree(handle);
@@ -169,8 +78,12 @@ class Unsafe {
    *   File name of the dynamic library.
    */
   static int libraryLoad(String filename) {
-    if (filename == null || filename.isEmpty) {
-      throw new ArgumentError('name: $filename');
+    if (filename == null) {
+      throw new ArgumentError.notNull("filename");
+    }
+
+    if (filename.isEmpty) {
+      throw new ArgumentError("File name should not be empty");
     }
 
     return _libraryLoad(filename);
@@ -187,12 +100,20 @@ class Unsafe {
    *   Symbol to obtain an address.
    */
   static int librarySymbol(int handle, String symbol) {
-    if (handle == null || handle == 0) {
-      throw new ArgumentError('handle: $handle');
+    if (handle == null) {
+      throw new ArgumentError.notNull("handle");
     }
 
-    if (symbol == null || symbol.isEmpty) {
-      throw new ArgumentError('symbol: $symbol');
+    if (handle == 0) {
+      throw new ArgumentError.value(handle , "handle");
+    }
+
+    if (symbol == null) {
+      throw new ArgumentError.notNull("symbol");
+    }
+
+    if (symbol.isEmpty) {
+      throw new ArgumentError("Symbol should not be empty");
     }
 
     return _librarySymbol(handle, symbol);
@@ -200,7 +121,11 @@ class Unsafe {
 
   static int memoryAllocate(int size) {
     if (size == null) {
-      throw new ArgumentError('size: $size');
+      throw new ArgumentError.notNull("size");
+    }
+
+    if (size < 0) {
+      throw new ArgumentError.value(size, "size");
     }
 
     return _memoryAllocate(size);
@@ -221,16 +146,20 @@ class Unsafe {
    *   Numbers of bytes to copy.
    */
   static void memoryCopy(int dest, int src, int num) {
-    if (dest == null || dest == 0) {
-      throw new ArgumentError('dest: $dest');
+    if (dest == null) {
+      throw new ArgumentError.notNull("dest");
     }
 
-    if (src == null || src == 0) {
-      throw new ArgumentError('src: $src');
+    if (src == null) {
+      throw new ArgumentError.notNull("src");
     }
 
-    if (num == null || num <= 0) {
-      throw new ArgumentError('num: $num');
+    if (num == null) {
+      throw new ArgumentError.notNull("num");
+    }
+
+    if (num < 0) {
+      throw new ArgumentError.value(num, "num");
     }
 
     _memoryCopy(dest, src, num);
@@ -244,8 +173,8 @@ class Unsafe {
    *   Address of allocated memory.
    */
   static void memoryFree(int handle) {
-    if (handle == null || handle == 0) {
-      throw new ArgumentError('handle: $handle');
+    if (handle == null) {
+      throw new ArgumentError.notNull("handle");
     }
 
     _memoryFree(handle);
@@ -266,23 +195,23 @@ class Unsafe {
    *   Numbers of bytes to copy.
    */
   static void memoryMove(int dest, int src, int num) {
-    if (dest == null || dest == 0) {
-      throw new ArgumentError('dest: $dest');
+    if (dest == null) {
+      throw new ArgumentError.notNull("dest");
     }
 
-    if (src == null || src == 0) {
-      throw new ArgumentError('src: $src');
+    if (src == null) {
+      throw new ArgumentError.notNull("src");
     }
 
     if (num == null) {
-      throw new ArgumentError('num: $num');
+      throw new ArgumentError.notNull("num");
     }
 
     _memoryMove(dest, src, num);
   }
 
   /**
-   * Registers the peer with the specified object.
+   * Registers the peer with the specified object and returns the weak persistence handle.
    *
    * Parameters:
    *   [Object] object
@@ -293,20 +222,24 @@ class Unsafe {
    *   [int] size
    *   Size of the peer.
    */
-  static void memoryPeer(Object object, int peer, int size) {
+  static int memoryPeer(Object object, int peer, int size) {
     if (object == null || object is bool || object is num || object is String) {
-      throw new ArgumentError('object: $object');
+      throw new ArgumentError.value(object, "object");
     }
 
-    if (peer == null || peer == 0) {
-      throw new ArgumentError('peer: $peer');
+    if (peer == null) {
+      throw new ArgumentError.notNull("peer");
     }
 
-    if (size == null || size == 0) {
-      throw new ArgumentError('size: $size');
+    if (size == null) {
+      throw new ArgumentError.notNull("size");
     }
 
-    _peerRegister(object, peer, size);
+    if (size < 0) {
+      throw new ArgumentError.value(size, "size");
+    }
+
+    return _peerRegister(object, peer, size);
   }
 
   /**
@@ -326,20 +259,24 @@ class Unsafe {
    *   Number of bytes to be set to the value.
    */
   static void memorySet(int base, int offset, int value, int num) {
-    if (base == null || base == 0) {
-      throw new ArgumentError('base: $base');
+    if (base == null) {
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
-    if (num == null || num < 0) {
-      throw new ArgumentError('num: $num');
+    if (num == null) {
+      throw new ArgumentError.notNull("num");
+    }
+
+    if (num < 0) {
+      throw new ArgumentError.value(num, "num");
     }
 
     value &= 0xff;
@@ -365,11 +302,11 @@ class Unsafe {
    */
   static double readFloat32(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readFloat32(base, offset);
@@ -390,11 +327,11 @@ class Unsafe {
    */
   static double readFloat64(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readFloat64(base, offset);
@@ -415,11 +352,11 @@ class Unsafe {
    */
   static int readInt16(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readInt16(base, offset);
@@ -440,11 +377,11 @@ class Unsafe {
    */
   static int readInt32(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readInt32(base, offset);
@@ -465,11 +402,11 @@ class Unsafe {
    */
   static int readInt64(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readInt64(base, offset);
@@ -490,11 +427,11 @@ class Unsafe {
    */
   static int readInt8(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readInt8(base, offset);
@@ -539,11 +476,11 @@ class Unsafe {
    */
   static int readUint16(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readUint16(base, offset);
@@ -564,11 +501,11 @@ class Unsafe {
    */
   static int readUint32(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readUint32(base, offset);
@@ -589,11 +526,11 @@ class Unsafe {
    */
   static int readUint64(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     var value = _readUint64(base, offset);
@@ -620,11 +557,11 @@ class Unsafe {
    */
   static int readUint8(int base, int offset) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     return _readUint8(base, offset);
@@ -645,15 +582,15 @@ class Unsafe {
    */
   static void writeFloat32(int base, int offset, double value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     _writeFloat32(base, offset, value);
@@ -674,15 +611,15 @@ class Unsafe {
    */
   static void writeFloat64(int base, int offset, double value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     _writeFloat64(base, offset, value);
@@ -703,15 +640,15 @@ class Unsafe {
    */
   static void writeInt16(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffff;
@@ -733,15 +670,15 @@ class Unsafe {
    */
   static void writeInt32(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffffffff;
@@ -763,15 +700,15 @@ class Unsafe {
    */
   static void writeInt64(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffffffffffffffff;
@@ -797,15 +734,15 @@ class Unsafe {
    */
   static void writeInt8(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xff;
@@ -814,7 +751,7 @@ class Unsafe {
 
   static void writeIntPtr(int base, int offset, int ptr) {
     if (ptr == null) {
-      throw new ArgumentError('ptr: $ptr');
+      throw new ArgumentError.notNull("ptr");
     }
 
     switch (Unsafe.sizeOfPointer) {
@@ -844,15 +781,15 @@ class Unsafe {
    */
   static void writeUint16(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffff;
@@ -874,15 +811,15 @@ class Unsafe {
    */
   static void writeUint32(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffffffff;
@@ -904,15 +841,15 @@ class Unsafe {
    */
   static void writeUint64(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xffffffffffffffff;
@@ -934,24 +871,24 @@ class Unsafe {
    */
   static void writeUint8(int base, int offset, int value) {
     if (base == null) {
-      throw new ArgumentError('base: $base');
+      throw new ArgumentError.notNull("base");
     }
 
     if (offset == null) {
-      throw new ArgumentError('offset: $offset');
+      throw new ArgumentError.notNull("offset");
     }
 
     if (value == null) {
-      throw new ArgumentError('value: $value');
+      throw new ArgumentError.notNull("value");
     }
 
     value &= 0xff;
     _writeUint8(base, offset, value);
   }
 
-  static int _getSizeOfPointer() native 'Unsafe_GetSizeOfPointer';
-
   static int _getPageSize() native 'Unsafe_GetPageSize';
+
+  static int _getSizeOfPointer() native 'Unsafe_GetSizeOfPointer';
 
   static bool _isLittleEndian() native 'Unsafe_IsLittleEndian';
 
@@ -971,7 +908,7 @@ class Unsafe {
 
   static void _memorySet(int base, int offset, int value, int num) native 'Unsafe_MemorySet';
 
-  static void _peerRegister(Object object, int peer, int size) native 'Unsafe_PeerRegister';
+  static int _peerRegister(Object object, int peer, int size) native 'Unsafe_PeerRegister';
 
   static double _readFloat32(int base, int offset) native 'Unsafe_ReadFloat32';
 
@@ -1013,70 +950,3 @@ class Unsafe {
 
   static void _writeUint8(int base, int offset, int value) native 'Unsafe_WriteUInt8';
 }
-
-// TODO: Remove
-class _VirtualMemory {
-  static const int NO_ACCESS = 1;
-
-  static const int READ_ONLY = 2;
-
-  static const int READ_WRITE = 3;
-
-  static const int READ_EXECUTE = 4;
-
-  static const int READ_WRITE_EXECUTE = 5;
-
-  final int size;
-
-  int _address;
-
-  bool _auto;
-
-  _VirtualMemory(this.size, [bool auto]) {
-    if (size == null || size == 0) {
-      throw new ArgumentError('size: $size');
-    }
-
-    if (auto == null) {
-      auto = false;
-    }
-
-    _auto = auto;
-    _address = _allocate(size);
-    if (auto) {
-      _peer(this, address, size);
-    }
-  }
-
-  int get address => _address;
-
-  void free() {
-    if (_auto) {
-      throw new StateError("Cannot free auto memory");
-    }
-
-    if (_address == null) {
-      throw new StateError("Cannot free not allocated memory");
-    }
-
-    _free(_address, size);
-    _address = null;
-  }
-
-  bool protect(int protection) {
-    if (protection == null || protection < NO_ACCESS || protection > READ_WRITE_EXECUTE) {
-      throw new ArgumentError('protection: $protection');
-    }
-
-    return _protect(_address, size, protection);
-  }
-
-  static int _allocate(int size) native 'Unsafe_VirtualMemoryAllocate';
-
-  static void _free(int address, int size) native 'Unsafe_VirtualMemoryFree';
-
-  static bool _peer(Object object, int address, int size) native 'Unsafe_VirtualMemoryPeer';
-
-  static bool _protect(int address, int size, int protection) native 'Unsafe_VirtualMemoryProtect';
-}
-

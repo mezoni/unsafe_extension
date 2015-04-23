@@ -1,5 +1,3 @@
-import "dart:io";
-
 import "package:unsafe_extension/src/unsafe_extension.dart";
 
 void main() {
