@@ -7,28 +7,25 @@ import "package:build_tools/build_shell.dart";
 import "package:build_tools/build_tools.dart";
 import "package:ccompilers/ccompilers.dart";
 import "package:file_utils/file_utils.dart";
-import "package:locking/locking.dart";
 import "package:path/path.dart" as pathos;
 import "package:patsubst/patsubst.dart";
 import "package:system_info/system_info.dart";
 
 class Installer {
+  static final lockObject = Builder.lock;
+
   Future install(List<String> arguments) async {
     if (arguments == null) {
       throw new ArgumentError.notNull("arguments");
     }
 
-    await runZoned(() async {
-      await lock(Builder.lock, () async {
-        var cwd = FileUtils.getcwd();
-        try {
-          FileUtils.chdir("lib/src");
-          await _install(arguments);
-        } finally {
-          FileUtils.chdir(cwd);
-        }
-      });
-    });
+    var cwd = FileUtils.getcwd();
+    try {
+      FileUtils.chdir("lib/src");
+      await _install(arguments);
+    } finally {
+      FileUtils.chdir(cwd);
+    }
   }
 
   Future _install(List<String> args) async {
@@ -98,6 +95,29 @@ class Installer {
       print("Setup $libname.");
       var compiled = pathos.join("compiled", arch, operatingSystem, libname);
       if (FileUtils.testfile(compiled, "file")) {
+        var compiledFile = new File(compiled);
+        var foundFile = new File(libname);
+        if (foundFile.existsSync()) {
+          var bytes1 = compiledFile.readAsBytesSync();
+          var bytes2 = foundFile.readAsBytesSync();
+          var length = bytes1.length;
+          if (bytes2.length == length) {
+            var equal = true;
+            for (var i = 0; i < length; i++) {
+              if (bytes1[i] != bytes2[i]) {
+                equal = false;
+                break;
+              }
+            }
+
+            if (equal) {
+              print("Already installed binary '$compiled'");
+              print("The ${t.name} successful.");
+              return 0;
+            }
+          }
+        }
+
         print("Copying compiled binary '$compiled'");
         new File(compiled).copySync(libname);
         print("The ${t.name} successful.");

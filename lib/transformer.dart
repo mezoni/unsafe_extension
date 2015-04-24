@@ -1,9 +1,11 @@
 library unsafe_extension.transformer;
 
+import "dart:async";
 import "dart:io";
 
 import "package:barback/barback.dart";
 import "package:file_utils/file_utils.dart";
+import "package:locking/locking.dart";
 import "package:path/path.dart" as lib_path;
 import "package:unsafe_extension/src/installer.dart";
 
@@ -33,14 +35,18 @@ class NativeExtensionBuilder extends Transformer {
       return null;
     }
 
-    try {
-      var path = _resolvePackagePath(filepath);
-      FileUtils.chdir(path);
-      var installer = new Installer();
-      await installer.install([]);
-    } finally {
-      FileUtils.chdir(_workingDirectory);
-    }
+    await runZoned(() async {
+      await lock(Installer.lockObject, () async {
+        try {
+          var path = _resolvePackagePath(filepath);
+          FileUtils.chdir(path);
+          var installer = new Installer();
+          await installer.install([]);
+        } finally {
+          FileUtils.chdir(_workingDirectory);
+        }
+      });
+    });
 
     return null;
   }
