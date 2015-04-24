@@ -9,3 +9,4 @@
 0.0.10 Removed support of Mac OS X (X86)
 0.0.11 Initial support of Linux (ARM). Author [Kenneth Endfinger](https://github.com/kaendfinger)
 0.0.14 Breaking changes: class `ForeignFunctionInterface` was removed
+0.0.18 Update Mac x86_64 Build. Author [Kenneth Endfinger](https://github.com/kaendfinger)

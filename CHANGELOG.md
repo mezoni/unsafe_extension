@@ -1,3 +1,7 @@
+## 0.0.18
+
+- Update Mac x86_64 Build. Author [Kenneth Endfinger](https://github.com/kaendfinger)
+
 ## 0.0.14
 
 - Breaking changes: class `ForeignFunctionInterface` was removed

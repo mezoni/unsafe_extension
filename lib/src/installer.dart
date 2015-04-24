@@ -18,14 +18,16 @@ class Installer {
       throw new ArgumentError.notNull("arguments");
     }
 
-    await lock(Builder.lock, () async {
-      var cwd = FileUtils.getcwd();
-      try {
-        FileUtils.chdir("lib/src");
-        await _install(arguments);
-      } finally {
-        FileUtils.chdir(cwd);
-      }
+    await runZoned(() async {
+      await lock(Builder.lock, () async {
+        var cwd = FileUtils.getcwd();
+        try {
+          FileUtils.chdir("lib/src");
+          await _install(arguments);
+        } finally {
+          FileUtils.chdir(cwd);
+        }
+      });
     });
   }
 
