@@ -7,6 +7,7 @@ import "package:build_tools/build_shell.dart";
 import "package:build_tools/build_tools.dart";
 import "package:ccompilers/ccompilers.dart";
 import "package:file_utils/file_utils.dart";
+import "package:locking/locking.dart";
 import "package:path/path.dart" as pathos;
 import "package:patsubst/patsubst.dart";
 import "package:system_info/system_info.dart";
@@ -17,13 +18,15 @@ class Installer {
       throw new ArgumentError.notNull("arguments");
     }
 
-    var cwd = FileUtils.getcwd();
-    try {
-      FileUtils.chdir("lib/src");
-      await _install(arguments);
-    } finally {
-      FileUtils.chdir(cwd);
-    }
+    await lock(Builder.lock, () async {
+      var cwd = FileUtils.getcwd();
+      try {
+        FileUtils.chdir("lib/src");
+        await _install(arguments);
+      } finally {
+        FileUtils.chdir(cwd);
+      }
+    });
   }
 
   Future _install(List<String> args) async {
