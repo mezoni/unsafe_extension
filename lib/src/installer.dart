@@ -12,8 +12,6 @@ import "package:patsubst/patsubst.dart";
 import "package:system_info/system_info.dart";
 
 class Installer {
-  static final lockObject = Builder.lock;
-
   Future install(List<String> arguments) async {
     if (arguments == null) {
       throw new ArgumentError.notNull("arguments");

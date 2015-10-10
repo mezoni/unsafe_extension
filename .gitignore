@@ -1,9 +1,8 @@
 .buildlog
 .DS_Store
 .idea
+.packages
 .pub/
 build/
 packages
 pubspec.lock
-lib/src/libunsafe_extension.dylib
-lib/src/libunsafe_extension.so

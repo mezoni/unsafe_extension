@@ -1,3 +1,8 @@
+## 0.0.20
+
+- Adapted for use package `package_config`
+- Adapted for use package `semaphore`
+
 ## 0.0.18
 
 - Update Mac x86_64 Build. Author [Kenneth Endfinger](https://github.com/kaendfinger)

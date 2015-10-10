@@ -1,12 +1,12 @@
 library unsafe_extension.transformer;
 
-import "dart:async";
 import "dart:io";
 
 import "package:barback/barback.dart";
 import "package:file_utils/file_utils.dart";
-import "package:locking/locking.dart";
+import "package:package_config/discovery_analysis.dart";
 import "package:path/path.dart" as lib_path;
+import "package:semaphore/semaphore.dart";
 import "package:unsafe_extension/src/installer.dart";
 
 class NativeExtensionBuilder extends Transformer {
@@ -16,10 +16,10 @@ class NativeExtensionBuilder extends Transformer {
 
   final BarbackSettings _settings;
 
-  String _workingDirectory;
+  Directory _workingDirectory;
 
   NativeExtensionBuilder.asPlugin(this._settings) {
-    _workingDirectory = Directory.current.path;
+    _workingDirectory = Directory.current;
   }
 
   String get allowedExtensions => EXT;
@@ -35,27 +35,28 @@ class NativeExtensionBuilder extends Transformer {
       return null;
     }
 
-    await runZoned(() async {
-      await lock(Installer.lockObject, () async {
-        try {
-          var path = _resolvePackagePath(filepath);
-          FileUtils.chdir(path);
-          var installer = new Installer();
-          await installer.install([]);
-        } finally {
-          FileUtils.chdir(_workingDirectory);
-        }
-      });
-    });
+    var semaphore = new GlobalSemaphore();
+    try {
+      await semaphore.acquire();
+      var path = _resolvePackagePath();
+      // This is not safe but there is no other way
+      FileUtils.chdir(path);
+      var installer = new Installer();
+      await installer.install([]);
+    } finally {
+      FileUtils.chdir(_workingDirectory.path);
+      semaphore.release();
+    }
 
     return null;
   }
 
-  // This is incorrect but there is no other way
-  String _resolvePackagePath(String filepath) {
-    var path = lib_path.join(_workingDirectory, "packages", PACKAGE);
-    path = new Link(path).resolveSymbolicLinksSync();
-    path = lib_path.dirname(path);
+  String _resolvePackagePath() {
+    var context = PackageContext.findAll(_workingDirectory);
+    var packages = context.packages;
+    var map = packages.asMap();
+    var path = map[PACKAGE];
+    path = lib_path.dirname(path.toFilePath());
     return path;
   }
 }
