@@ -55,8 +55,10 @@ class NativeExtensionBuilder extends Transformer {
     var context = PackageContext.findAll(_workingDirectory);
     var packages = context.packages;
     var map = packages.asMap();
-    var path = map[PACKAGE];
-    path = lib_path.dirname(path.toFilePath());
+    var uri = map[PACKAGE];
+    var file = new File(uri.toFilePath());
+    var path = file.resolveSymbolicLinksSync();
+    path = lib_path.dirname(path);
     return path;
   }
 }

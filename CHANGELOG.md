@@ -1,3 +1,7 @@
+## 0.0.21
+
+- Fixed bug in `NativeExtensionBuilder._resolvePackagePath()`
+
 ## 0.0.20
 
 - Adapted for use package `package_config`
