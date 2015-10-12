@@ -40,10 +40,13 @@ class NativeExtensionBuilder extends Transformer {
       await semaphore.acquire();
       var path = _resolvePackagePath();
       // This is not safe but there is no other way
+      print("Working directory: ${_workingDirectory.path}");
+      print("Change directory to: $path");
       FileUtils.chdir(path);
       var installer = new Installer();
       await installer.install([]);
     } finally {
+      print("Change directory back: ${_workingDirectory.path}");
       FileUtils.chdir(_workingDirectory.path);
       semaphore.release();
     }
