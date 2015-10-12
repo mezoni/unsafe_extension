@@ -7,7 +7,6 @@ dependencies:
   barback: any
   build_tools: any
   ccompilers: any
-  package_config: any
   path: any
   pub_cache: any
   semaphore: any

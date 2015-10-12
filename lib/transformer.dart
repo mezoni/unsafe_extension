@@ -4,7 +4,6 @@ import "dart:io";
 
 import "package:barback/barback.dart";
 import "package:file_utils/file_utils.dart";
-import "package:package_config/discovery_analysis.dart";
 import "package:path/path.dart" as lib_path;
 import "package:pub_cache/pub_cache.dart";
 import "package:semaphore/semaphore.dart";
@@ -38,12 +37,10 @@ class NativeExtensionBuilder extends Transformer {
 
     var content = await transform.primaryInput.readAsString();
     var version = content.trim();
-    _temp(version);
     var semaphore = new GlobalSemaphore();
     try {
       await semaphore.acquire();
-      var path = _resolvePackagePath();
-      path = _temp(version);
+      var path = _resolvePackagePath(version);
       // This is not safe but there is no other way
       print("Working directory: ${_workingDirectory.path}");
       print("Change directory to: $path");
@@ -59,32 +56,22 @@ class NativeExtensionBuilder extends Transformer {
     return null;
   }
 
-  String _resolvePackagePath() {
-    var context = PackageContext.findAll(_workingDirectory);
-    var packages = context.packages;
-    var map = packages.asMap();
-    var uri = map[PACKAGE];
-    var file = new File(uri.toFilePath());
-    var path = file.resolveSymbolicLinksSync();
-    path = lib_path.dirname(path);
-    return path;
-  }
-
-  String _temp(String version) {
+  String _resolvePackagePath(String version) {
+    String path;
     var pubCache = new PubCache();
-    Package package;
     var packageRefs = pubCache.getAllPackageVersions(PACKAGE);
     for (var packageRef in packageRefs) {
       if (packageRef.version.toString() == version) {
-        package = packageRef.resolve();
+        var package = packageRef.resolve();
+        path = package.location.path;
         break;
       }
     }
 
-    if (package == null) {
+    if (path == null) {
       throw new StateError("Unable to find package '$PACKAGE-$version' in pub-cache");
     }
 
-    return package.location.path;
+    return path;
   }
 }
