@@ -9,6 +9,7 @@ const String CHANGELOG_MD = "CHANGELOG.md";
 const String PUBSPEC_YAML = "pubspec.yaml";
 const String README_MD = "README.md";
 const String README_MD_IN = "tool/README.md.in";
+const String UNSAFE_EXTENSION_INF = "lib/src/unsafe_extension.inf";
 
 void main(List<String> args) {
   // Change directory to root
@@ -39,6 +40,10 @@ void main(List<String> args) {
     new File(t.name).writeAsStringSync(template);
   });
 
+  file(UNSAFE_EXTENSION_INF, [PUBSPEC_YAML], (Target t, Map args) {
+    new File(t.name).writeAsStringSync(getVersion());
+  });
+
   target("default", ["git:status"], null, description: "git status");
 
   target("git:status", [], (Target t, Map args) {
@@ -49,7 +54,7 @@ void main(List<String> args) {
     return exec("git", ["add", "--all"]);
   }, description: "git add --all");
 
-  target("git:commit", [CHANGELOG_MD, README_MD, "git:add"], (Target t, Map args) {
+  target("git:commit", [CHANGELOG_MD, README_MD, UNSAFE_EXTENSION_INF, "git:add"], (Target t, Map args) {
     var message = args["m"];
     if (message == null || message.isEmpty) {
       print("Please, specify the `commit` message with --m option");

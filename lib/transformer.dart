@@ -6,6 +6,7 @@ import "package:barback/barback.dart";
 import "package:file_utils/file_utils.dart";
 import "package:package_config/discovery_analysis.dart";
 import "package:path/path.dart" as lib_path;
+import "package:pub_cache/pub_cache.dart";
 import "package:semaphore/semaphore.dart";
 import "package:unsafe_extension/src/installer.dart";
 
@@ -35,10 +36,14 @@ class NativeExtensionBuilder extends Transformer {
       return null;
     }
 
+    var content = await transform.primaryInput.readAsString();
+    var version = content.trim();
+    _temp(version);
     var semaphore = new GlobalSemaphore();
     try {
       await semaphore.acquire();
       var path = _resolvePackagePath();
+      path = _temp(version);
       // This is not safe but there is no other way
       print("Working directory: ${_workingDirectory.path}");
       print("Change directory to: $path");
@@ -63,5 +68,23 @@ class NativeExtensionBuilder extends Transformer {
     var path = file.resolveSymbolicLinksSync();
     path = lib_path.dirname(path);
     return path;
+  }
+
+  String _temp(String version) {
+    var pubCache = new PubCache();
+    Package package;
+    var packageRefs = pubCache.getAllPackageVersions(PACKAGE);
+    for (var packageRef in packageRefs) {
+      if (packageRef.version.toString() == version) {
+        package = packageRef.resolve();
+        break;
+      }
+    }
+
+    if (package == null) {
+      throw new StateError("Unable to find package '$PACKAGE-$version' in pub-cache");
+    }
+
+    return package.location.path;
   }
 }
