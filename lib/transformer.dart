@@ -12,7 +12,7 @@ class NativeExtensionBuilder extends Transformer {
 
   static const String PACKAGE = "unsafe_extension";
 
-  bool _isInstalled = false;
+  static bool _isInstalled = false;
 
   final BarbackSettings _settings;
 
@@ -61,7 +61,7 @@ class NativeExtensionBuilder extends Transformer {
     }
 
     _isInstalled = true;
-    print("Application '$name' terminated: $path");
+    print("Application '$name' terminated");
     return null;
   }
 
