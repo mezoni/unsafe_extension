@@ -58,7 +58,7 @@ class NativeExtensionBuilder extends Transformer {
     } finally {
       sandbox.destroy();
       print("================");
-      print("Script '$executable' terminated");
+      print("Script '$name/$executable' terminated");
       print("");
     }
 
