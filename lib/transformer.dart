@@ -38,6 +38,7 @@ class NativeExtensionBuilder extends Transformer {
     var name = "$PACKAGE-$version";
     var path = _resolvePackagePath(version);
     print("Create sandbox for '$name'");
+    print("Pleas be patient or ask Dart Team: why they do not want to add the 'preinstall' support in pub?");
     var sandbox = new Sandbox(path);
     print("Sandbox created at ${sandbox.environmentPath}");
     var executable = "bin/setup.dart";
