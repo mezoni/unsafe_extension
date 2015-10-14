@@ -3,11 +3,9 @@ library unsafe_extension.transformer;
 import "dart:io";
 
 import "package:barback/barback.dart";
-import "package:file_utils/file_utils.dart";
 import "package:path/path.dart" as lib_path;
 import "package:pub_cache/pub_cache.dart";
-import "package:semaphore/semaphore.dart";
-import "package:unsafe_extension/src/installer.dart";
+import "package:sandbox/sandbox.dart";
 
 class NativeExtensionBuilder extends Transformer {
   static const String EXT = ".inf";
@@ -37,22 +35,24 @@ class NativeExtensionBuilder extends Transformer {
 
     var content = await transform.primaryInput.readAsString();
     var version = content.trim();
-    var semaphore = new GlobalSemaphore();
-    try {
-      await semaphore.acquire();
-      var path = _resolvePackagePath(version);
-      // This is not safe but there is no other way
-      print("Working directory: ${_workingDirectory.path}");
-      print("Change directory to: $path");
-      FileUtils.chdir(path);
-      var installer = new Installer();
-      await installer.install([]);
-    } finally {
-      print("Change directory back: ${_workingDirectory.path}");
-      FileUtils.chdir(_workingDirectory.path);
-      semaphore.release();
+    var path = _resolvePackagePath(version);
+    print("Create sandbox for '$path'");
+    var sandbox = new Sandbox(path);
+    print("Run application in sandbox...");
+    var result = sandbox.runSync("bin/setup.dart", [], workingDirectory: path);
+    if (result.stdout is List) {
+      print(new String.fromCharCodes(result.stdout));
+    } else if (result.stdout is String) {
+      print(result.stdout);
     }
 
+    if (result.stderr is List) {
+      print(new String.fromCharCodes(result.stderr));
+    } else if (result.stderr is String) {
+      print(result.stderr);
+    }
+
+    print("Application terminated: $path");
     return null;
   }
 

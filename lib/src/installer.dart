@@ -12,21 +12,24 @@ import "package:patsubst/patsubst.dart";
 import "package:system_info/system_info.dart";
 
 class Installer {
-  Future install(List<String> arguments) async {
+  Future<int> install(List<String> arguments) async {
     if (arguments == null) {
       throw new ArgumentError.notNull("arguments");
     }
 
+    var code = -1;
     var cwd = FileUtils.getcwd();
     try {
       FileUtils.chdir("lib/src");
-      await _install(arguments);
+      code = await _install(arguments);
     } finally {
       FileUtils.chdir(cwd);
     }
+
+    return code;
   }
 
-  Future _install(List<String> args) async {
+  Future<int> _install(List<String> args) async {
     const String PROJECT_NAME = "unsafe_extension";
     const String LIBNAME_LINUX = "lib$PROJECT_NAME.so";
     const String LIBNAME_MACOS = "lib$PROJECT_NAME.dylib";

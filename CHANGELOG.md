@@ -1,3 +1,7 @@
+## 0.0.24
+
+- Adapted for use package `sandbox`
+
 ## 0.0.21
 
 - Fixed bug in `NativeExtensionBuilder._resolvePackagePath()`
