@@ -37,11 +37,34 @@ class NativeExtensionBuilder extends Transformer {
     var version = content.trim();
     var name = "$PACKAGE-$version";
     var path = _resolvePackagePath(version);
-    print("Create sandbox for package '$name' at '$path'");
+    print("Create sandbox for '$name'");
     var sandbox = new Sandbox(path);
-    var script = "bin/setup.dart";
-    print("Run '$name/$script' in sandbox...");
-    var result = sandbox.runSync(script, [], workingDirectory: path);
+    print("Sandbox created at ${sandbox.environmentPath}");
+    var executable = "bin/setup.dart";
+    var arguments = <String>[];
+    print("Run script '$name/$executable' in sandbox");
+    print("================");
+    try {
+      var dart = lib_path.join(sandbox.sdkPath, "bin", "dart");
+      var args = <String>[];
+      var path = lib_path.join(sandbox.environmentPath, "packages");
+      args.add("--package-root=$path");
+      path = lib_path.join(sandbox.applicationPath, executable);
+      args.add(path);
+      args.addAll(arguments);
+      var result = Process.runSync(dart, args,
+          runInShell: true, workingDirectory: sandbox.applicationPath);
+      _displayOutput(result);
+    } finally {
+      sandbox.destroy();
+      print("================");
+      print("Script '$executable' terminated");
+    }
+
+    return null;
+  }
+
+  void _displayOutput(ProcessResult result) {
     if (result.stdout is List) {
       print(new String.fromCharCodes(result.stdout));
     } else if (result.stdout is String) {
@@ -53,9 +76,6 @@ class NativeExtensionBuilder extends Transformer {
     } else if (result.stderr is String) {
       print(result.stderr);
     }
-
-    print("Terminated '$name/$script'");
-    return null;
   }
 
   String _resolvePackagePath(String version) {
@@ -71,7 +91,8 @@ class NativeExtensionBuilder extends Transformer {
     }
 
     if (path == null) {
-      throw new StateError("Unable to find package '$PACKAGE-$version' in pub-cache");
+      throw new StateError(
+          "Unable to find package '$PACKAGE-$version' in pub-cache");
     }
 
     return path;
