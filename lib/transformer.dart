@@ -12,8 +12,6 @@ class NativeExtensionBuilder extends Transformer {
 
   static const String PACKAGE = "unsafe_extension";
 
-  static bool _isInstalled = false;
-
   final BarbackSettings _settings;
 
   Directory _workingDirectory;
@@ -38,16 +36,12 @@ class NativeExtensionBuilder extends Transformer {
     var content = await transform.primaryInput.readAsString();
     var version = content.trim();
     var name = "$PACKAGE-$version";
-    if (_isInstalled) {
-      print("Package '$name' already installed");
-      return null;
-    }
-
     var path = _resolvePackagePath(version);
     print("Create sandbox for package '$name' at '$path'");
     var sandbox = new Sandbox(path);
-    print("Run '$name' in sandbox...");
-    var result = sandbox.runSync("bin/setup.dart", [], workingDirectory: path);
+    var script = "bin/setup.dart";
+    print("Run '$name/$script' in sandbox...");
+    var result = sandbox.runSync(script, [], workingDirectory: path);
     if (result.stdout is List) {
       print(new String.fromCharCodes(result.stdout));
     } else if (result.stdout is String) {
@@ -60,8 +54,7 @@ class NativeExtensionBuilder extends Transformer {
       print(result.stderr);
     }
 
-    _isInstalled = true;
-    print("Application '$name' terminated");
+    print("Terminated '$name/$script'");
     return null;
   }
 
